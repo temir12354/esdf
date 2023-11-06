@@ -1,0 +1,90 @@
+import pygame
+import random
+
+# Инициализация Pygame
+pygame.init()
+
+# Размер окна игры
+screen_width = 300
+screen_height = 300
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Сапер")
+
+# Цвета
+black = (0, 0, 0)
+white = (255, 255, 255)
+grey = (200, 200, 200)
+red = (255, 0, 0)
+
+# Размеры сетки
+grid_size = 15
+columns = screen_width // grid_size
+rows = screen_height // grid_size
+
+# Создание сетки
+grid = [[0] * columns for _ in range(rows)]
+
+# Установка мин
+mines = 4
+for _ in range(mines):
+    x = random.randint(0, columns - 1)
+    y = random.randint(0, rows - 1)
+    grid[y][x] = 'M'
+
+
+# Функция для отображения сетки
+def draw_grid():
+    for row in range(rows):
+        for column in range(columns):
+            if grid[row][column] == 0:
+                pygame.draw.rect(screen, grey, (column * grid_size, row * grid_size, grid_size, grid_size))
+            elif grid[row][column] == 'M':
+                pygame.draw.rect(screen, red, (column * grid_size, row * grid_size, grid_size, grid_size))
+
+
+# Функция для отображения текста
+def draw_text(text, font, color, x, y):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.center = (x, y)
+    screen.blit(text_surface, text_rect)
+
+
+# Основной цикл игры
+running = True
+game_over = False
+while running:
+    screen.fill(white)
+
+    # Обработка событий
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+            pos = pygame.mouse.get_pos()
+            column = pos[0] // grid_size
+            row = pos[1] // grid_size
+
+            if grid[row][column] == 'M':
+                game_over = True
+            else:
+                # Подсчет количества мин вокруг выбранной ячейки
+                count = 0
+                for i in [-1, 0, 1]:
+                    for j in [-1, 0, 1]:
+                        if 0 <= row + i < rows and 0 <= column + j < columns and grid[row + i][column + j] == 'M':
+                            count += 1
+                grid[row][column] = count
+
+    # Отображение сетки и текста
+    draw_grid()
+    if game_over:
+        draw_text("Game Over", pygame.font.Font(None, 30), black, screen_width // 2, screen_height // 2)
+    if all(grid[row][column] != 0 for row in range(rows) for column in range(columns)):
+        draw_text("You Win", pygame.font.Font(None, 30), black, screen_width // 2, screen_height // 2)
+
+    # Обновление экрана
+    pygame.display.flip()
+
+# Завершение работы Pygame
+pygame.quit()
